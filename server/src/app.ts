@@ -1,4 +1,4 @@
-﻿import cors from "@fastify/cors";
+import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import Fastify, {
@@ -10,6 +10,7 @@ import { closeDatabase } from "./database/connection.js";
 import { env } from "./config/env.js";
 import { healthRoutes } from "./routes/health.js";
 import { productRoutes } from "./modules/products/product.routes.js";
+import { affiliateRoutes } from "./modules/affiliate/affiliate.routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -66,6 +67,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(productRoutes, {
     prefix: "/api/v1",
   });
+
+  await app.register(affiliateRoutes);
 
   app.setNotFoundHandler(async (request, reply) => {
     return reply.status(404).send({
@@ -130,4 +133,3 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   return app;
 }
-
