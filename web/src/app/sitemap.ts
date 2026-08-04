@@ -7,6 +7,10 @@ const routes = [
   "/favoritos",
   "/marcas",
   "/sobre",
+  "/privacidade",
+  "/termos",
+  "/afiliados",
+  "/contato",
 ] as const;
 
 function getSiteUrl(): string {
@@ -20,7 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = getSiteUrl();
   const lastModified = new Date();
 
-  return routes.map((route, index) => ({
+  return routes.map((route) => ({
     url: `${siteUrl}${route}`,
     lastModified,
     changeFrequency:
@@ -30,6 +34,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
         ? 1
         : route === "/explorar"
           ? 0.9
-          : 0.7,
+          : route === "/privacidade" ||
+              route === "/termos" ||
+              route === "/afiliados" ||
+              route === "/contato"
+            ? 0.4
+            : 0.7,
   }));
 }
