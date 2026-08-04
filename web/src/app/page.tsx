@@ -7,92 +7,32 @@ import { usePathname, useRouter } from "next/navigation";
 
 type Product = {
   id: number;
+  slug: string;
   name: string;
-  brand: "Nike" | "Adidas" | "Lacoste";
+  brand: string;
   category: string;
   image: string;
   description: string;
   featured?: boolean;
   tag?: string;
+  purchaseUrl?: string | null;
 };
 
-const products: Product[] = [
-  {
-    id: 1,
-    name: "Tênis Nike Air Max Excee Masculino",
-    brand: "Nike",
-    category: "Tênis",
-    image: "https://imgnike-a.akamaihd.net/360x360/02732251A2.jpg",
-    description: "Uma leitura contemporânea do Air Max 90, com linhas alongadas e conforto para todos os dias.",
-    featured: true,
-    tag: "Destaque",
-  },
-  {
-    id: 2,
-    name: "Tênis Nike SB Force 58 Masculino",
-    brand: "Nike",
-    category: "Tênis",
-    image: "https://imgnike-a.akamaihd.net/360x360/011580IDA2.jpg",
-    description: "Durabilidade, flexibilidade e referências do basquete em uma silhueta feita para as ruas.",
-    tag: "Popular",
-  },
-  {
-    id: 3,
-    name: "Suéter Masculino de Malha Regular",
-    brand: "Lacoste",
-    category: "Suéter",
-    image: "https://imagesa1.lacoste.com/dw/image/v2/BCWL_PRD/on/demandware.static/-/Sites-master/default/dwd842122f/AH1957_166_20.jpg?imwidth=380&impolicy=pctp&imdensity=1",
-    description: "Uma peça versátil que equilibra conforto, acabamento refinado e elegância casual.",
-    featured: true,
-    tag: "Seleção MR",
-  },
-  {
-    id: 4,
-    name: "Moletom Masculino Clássico",
-    brand: "Lacoste",
-    category: "Moletom",
-    image: "https://imagesa1.lacoste.com/dw/image/v2/BCWL_PRD/on/demandware.static/-/Sites-master/default/dw68e6b590/SH2662_031_24.jpg?imwidth=380&impolicy=pctp&imdensity=1",
-    description: "Modelagem clássica, tecido macio e a identidade atemporal da marca.",
-  },
-  {
-    id: 5,
-    name: "Calça Esportiva Firebird",
-    brand: "Adidas",
-    category: "Calça",
-    image: "https://assets.adidas.com/images/h_2000,f_auto,q_auto,fl_lossy,c_fill,g_auto/b2a4ff6d6e6c44a39e8f80a5b8a26631_9366/Calca_Esportiva_Firebird_Preto_KD8315_25_model.jpg",
-    description: "O estilo clássico Firebird reinterpretado para uma rotina urbana e contemporânea.",
-    featured: true,
-    tag: "Ícone",
-  },
-  {
-    id: 6,
-    name: "Tênis Lite Racer 4.0",
-    brand: "Adidas",
-    category: "Tênis",
-    image: "https://assets.adidas.com/images/h_2000,f_auto,q_auto,fl_lossy,c_fill,g_auto/79158bcae8b24765a6dce97ed8b504c7_9366/Tenis_Lite_Racer_4.0_Preto_JJ7367_01_00_standard.jpg",
-    description: "Design leve e versátil com amortecimento Cloudfoam para acompanhar o dia inteiro.",
-  },
-  {
-    id: 7,
-    name: "Jaqueta Jeans Adicolor Firebird",
-    brand: "Adidas",
-    category: "Jaqueta",
-    image: "https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/cf3deb85af984d44be1731fc748a8d8e_9366/JAQUETA_JEANS_ADICOLOR_FIREBIRD_TRACK_TOP_Azul_KD1517_HM1.jpg",
-    description: "Uma nova interpretação em jeans para uma das linhas mais reconhecidas da Adidas.",
-  },
-  {
-    id: 8,
-    name: "Jaqueta Corinthians Total 90",
-    brand: "Nike",
-    category: "Jaqueta",
-    image: "https://imgnike-a.akamaihd.net/360x360/061064IDA11.jpg",
-    description: "A estética Total 90 retorna em uma peça que celebra uma era marcante do futebol.",
-    tag: "Novidade",
-  },
-];
-
-const brands = ["Todas", "Nike", "Adidas", "Lacoste"];
-const categories = ["Todos", "Tênis", "Jaqueta", "Moletom", "Calça", "Suéter"];
+type CatalogPayload = {
+  products: Product[];
+  brands: Array<{
+    id: number;
+    name: string;
+    slug: string;
+    productCount: number;
+  }>;
+  categories: Array<{
+    id: number;
+    name: string;
+    slug: string;
+    productCount: number;
+  }>;
+};
 const platformCategories = [
   { name: "Eletrônicos", icon: "electronics" },
   { name: "Vestuário", icon: "apparel" },
@@ -153,6 +93,9 @@ export default function Home() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [brands, setBrands] = useState<string[]>(["Todas"]);
+  const [categories, setCategories] = useState<string[]>(["Todos"]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -164,6 +107,52 @@ export default function Home() {
     return () => cancelAnimationFrame(frame);
   }, []);
 
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadCatalog(): Promise<void> {
+      try {
+        const response = await fetch("/api/catalog", {
+          signal: controller.signal,
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Falha ao carregar o catálogo.");
+        }
+
+        const payload =
+          (await response.json()) as CatalogPayload;
+
+        setProducts(payload.products);
+        setBrands([
+          "Todas",
+          ...payload.brands.map((item) => item.name),
+        ]);
+        setCategories([
+          "Todos",
+          ...payload.categories.map((item) => item.name),
+        ]);
+      } catch (error) {
+        if (
+          error instanceof DOMException &&
+          error.name === "AbortError"
+        ) {
+          return;
+        }
+
+        setProducts([]);
+      }
+    }
+
+    void loadCatalog();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? "dark" : "light";
     localStorage.setItem("mr-theme-v2", dark ? "dark" : "light");
@@ -227,6 +216,7 @@ export default function Home() {
       return first.id - second.id;
     });
   }, [
+    products,
     query,
     brand,
     category,
@@ -248,6 +238,45 @@ export default function Home() {
     });
   }
 
+  async function openProduct(product: Product): Promise<void> {
+    setSelected(product);
+
+    try {
+      const response = await fetch(
+        `/api/catalog/products/${encodeURIComponent(product.slug)}`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        return;
+      }
+
+      const detail = (await response.json()) as {
+        id: number;
+        slug: string;
+        description: string;
+        purchaseUrl: string | null;
+      };
+
+      setSelected((current) => {
+        if (!current || current.id !== detail.id) {
+          return current;
+        }
+
+        return {
+          ...current,
+          description: detail.description,
+          purchaseUrl: detail.purchaseUrl,
+        };
+      });
+    } catch {
+      // O resumo permanece disponível se os detalhes falharem.
+    }
+  }
   function scrollToCatalog() {
     const catalogSection = document.getElementById("explorar");
 
@@ -542,7 +571,7 @@ export default function Home() {
                 : " produtos"}
             </span>
           </div>
-          {filteredProducts.length ? <div className="product-grid">{filteredProducts.map((product) => <ProductCard key={product.id} product={product} favorite={favorites.includes(product.id)} onFavorite={() => toggleFavorite(product.id)} onOpen={() => setSelected(product)}/>)}</div> : <div className="empty-state"><Icon name="search" size={32}/><h3>Nenhum produto encontrado</h3><p>Tente remover um filtro ou pesquisar outro termo.</p><button className="secondary-btn" onClick={() => { setQuery(""); setBrand("Todas"); setCategory("Todos"); }}>Limpar filtros</button></div>}
+          {filteredProducts.length ? <div className="product-grid">{filteredProducts.map((product) => <ProductCard key={product.id} product={product} favorite={favorites.includes(product.id)} onFavorite={() => toggleFavorite(product.id)} onOpen={() => void openProduct(product)}/>)}</div> : <div className="empty-state"><Icon name="search" size={32}/><h3>Nenhum produto encontrado</h3><p>Tente remover um filtro ou pesquisar outro termo.</p><button className="secondary-btn" onClick={() => { setQuery(""); setBrand("Todas"); setCategory("Todos"); }}>Limpar filtros</button></div>}
         </section>}
 
         {pathname === "/sobre" && <section className="manifesto section page-section" id="sobre">
@@ -554,7 +583,17 @@ export default function Home() {
 
       <footer><div className="footer-top"><div className="footer-brand"><span className="brand-mark">MR</span><div><b>MR</b><p>A visão de hoje constrói o amanhã.</p></div></div><div><span>Explore</span><Link href="/#explorar">Produtos</Link><Link href="/#categorias">Categorias</Link><Link href="/marcas">Marcas</Link></div><div><span>Institucional</span><Link href="/sobre">Sobre a MR</Link><Link href="/sobre">Transparência</Link><Link href="/sobre">Privacidade</Link></div></div><div className="footer-bottom"><span>© 2026 MR. Todos os direitos reservados.</span><span>Catálogo independente com redirecionamento para parceiros.</span></div></footer>
 
-      {selected && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}><section className="product-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button className="modal-close icon-btn" onClick={() => setSelected(null)} aria-label="Fechar detalhes"><Icon name="close"/></button><div className="modal-image"><Image src={selected.image} alt={selected.name} fill sizes="(max-width: 720px) 100vw, 50vw" priority unoptimized /></div><div className="modal-content"><span className="kicker">{selected.brand} · {selected.category}</span><h2 id="modal-title">{selected.name}</h2><p>{selected.description}</p><div className="affiliate-note"><Icon name="shield"/><span><b>Compra segura na loja parceira</b><small>A MR não processa pagamentos. Você será direcionado à loja oficial.</small></span></div><button className="primary-btn" onClick={() => alert("Demo: no sistema oficial, este botão abrirá o link de afiliado rastreado.")}>Ir para a loja parceira <Icon name="arrow"/></button><button className={`secondary-btn modal-favorite ${favorites.includes(selected.id) ? "is-active" : ""}`} onClick={() => toggleFavorite(selected.id)}><Icon name="heart"/>{favorites.includes(selected.id) ? "Remover dos favoritos" : "Salvar nos favoritos"}</button></div></section></div>}
+      {selected && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}><section className="product-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button className="modal-close icon-btn" onClick={() => setSelected(null)} aria-label="Fechar detalhes"><Icon name="close"/></button><div className="modal-image"><Image src={selected.image} alt={selected.name} fill sizes="(max-width: 720px) 100vw, 50vw" priority unoptimized /></div><div className="modal-content"><span className="kicker">{selected.brand} · {selected.category}</span><h2 id="modal-title">{selected.name}</h2><p>{selected.description}</p><div className="affiliate-note"><Icon name="shield"/><span><b>Compra segura na loja parceira</b><small>A MR não processa pagamentos. Você será direcionado à loja oficial.</small></span></div><button
+  className="primary-btn"
+  disabled={!selected.purchaseUrl}
+  onClick={() => {
+    if (selected.purchaseUrl) {
+      window.location.assign(selected.purchaseUrl);
+    }
+  }}
+>
+  Ir para a loja parceira <Icon name="arrow"/>
+</button><button className={`secondary-btn modal-favorite ${favorites.includes(selected.id) ? "is-active" : ""}`} onClick={() => toggleFavorite(selected.id)}><Icon name="heart"/>{favorites.includes(selected.id) ? "Remover dos favoritos" : "Salvar nos favoritos"}</button></div></section></div>}
     </div>
   );
 }
