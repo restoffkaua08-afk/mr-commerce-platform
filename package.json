@@ -1,23 +1,13 @@
 {
-  "name": "webloja-plataform",
+  "name": "mr-product-platform",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "description": "Plataforma MR de descoberta de produtos e redirecionamento afiliado.",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
-    "axios": "^1.6.2"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15",
-    "@vitejs/plugin-react": "^4.2.0",
-    "vite": "^5.0.0"
+    "build": "npm --prefix server run build && npm --prefix web run build",
+    "test": "npm --prefix server test && npm --prefix web test",
+    "lint": "npm --prefix server run typecheck && npm --prefix web run lint",
+    "db:check": "npm --prefix server run db:check",
+    "audit:production": "npm --prefix server audit --omit=dev && npm --prefix web audit --omit=dev"
   }
 }
