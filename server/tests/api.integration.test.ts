@@ -148,7 +148,7 @@ describe("API pública MR", () => {
 
     const body = response.json<CatalogResponse>();
 
-    expect(body.data).toHaveLength(4);
+    expect(body.data).toHaveLength(5);
 
     for (const category of body.data) {
       expect(category.id).toBeTypeOf("number");
@@ -159,6 +159,72 @@ describe("API pública MR", () => {
     }
   });
 
+  it("retorna as contagens corretas por categoria", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/v1/categories",
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = response.json<{
+      data: Array<{
+        slug: string;
+        productCount: number;
+      }>;
+    }>();
+
+    const counts = Object.fromEntries(
+      body.data.map((category) => [
+        category.slug,
+        category.productCount,
+      ]),
+    );
+
+    expect(counts).toMatchObject({
+      tenis: 3,
+      jaquetas: 2,
+      calcas: 1,
+      moletons: 1,
+      sueteres: 1,
+    });
+  });
+
+  it("associa cada produto à categoria correta", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/v1/products?limit=20",
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = response.json<{
+      data: Array<{
+        slug: string;
+        category: {
+          slug: string;
+        };
+      }>;
+    }>();
+
+    const categoriesByProduct = Object.fromEntries(
+      body.data.map((product) => [
+        product.slug,
+        product.category.slug,
+      ]),
+    );
+
+    expect(categoriesByProduct).toMatchObject({
+      "tenis-nike-air-max-excee-masculino": "tenis",
+      "tenis-nike-sb-force-58-masculino": "tenis",
+      "tenis-adidas-lite-racer-4": "tenis",
+      "calca-esportiva-adidas-firebird": "calcas",
+      "jaqueta-jeans-adidas-adicolor-firebird": "jaquetas",
+      "jaqueta-corinthians-nike-total-90": "jaquetas",
+      "moletom-masculino-lacoste-classico": "moletons",
+      "sueter-masculino-lacoste-malha-regular": "sueteres",
+    });
+  });
   it("retorna erro padronizado para rota inexistente", async () => {
     const response = await app.inject({
       method: "GET",

@@ -1,4 +1,4 @@
-﻿import type { RowDataPacket } from "mysql2/promise";
+import type { RowDataPacket } from "mysql2/promise";
 
 import {
   checkDatabaseConnection,
@@ -52,7 +52,7 @@ async function run(): Promise<void> {
 
     const expected = new Map<string, number>([
       ["brands", 3],
-      ["categories", 4],
+      ["categories", 5],
       ["merchants", 3],
       ["products", 8],
       ["product_images", 16],
