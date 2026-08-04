@@ -33,6 +33,8 @@ type CatalogPayload = {
     productCount: number;
   }>;
 };
+type CatalogStatus = "loading" | "ready" | "error";
+
 const platformCategories = [
   { name: "Eletrônicos", icon: "electronics" },
   { name: "Vestuário", icon: "apparel" },
@@ -96,6 +98,8 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [brands, setBrands] = useState<string[]>(["Todas"]);
   const [categories, setCategories] = useState<string[]>(["Todos"]);
+  const [catalogStatus, setCatalogStatus] =
+    useState<CatalogStatus>("loading");
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -135,6 +139,7 @@ export default function Home() {
           "Todos",
           ...payload.categories.map((item) => item.name),
         ]);
+        setCatalogStatus("ready");
       } catch (error) {
         if (
           error instanceof DOMException &&
@@ -144,6 +149,7 @@ export default function Home() {
         }
 
         setProducts([]);
+        setCatalogStatus("error");
       }
     }
 
@@ -571,7 +577,37 @@ export default function Home() {
                 : " produtos"}
             </span>
           </div>
-          {filteredProducts.length ? <div className="product-grid">{filteredProducts.map((product) => <ProductCard key={product.id} product={product} favorite={favorites.includes(product.id)} onFavorite={() => toggleFavorite(product.id)} onOpen={() => void openProduct(product)}/>)}</div> : <div className="empty-state"><Icon name="search" size={32}/><h3>Nenhum produto encontrado</h3><p>Tente remover um filtro ou pesquisar outro termo.</p><button className="secondary-btn" onClick={() => { setQuery(""); setBrand("Todas"); setCategory("Todos"); }}>Limpar filtros</button></div>}
+          {filteredProducts.length ? <div className="product-grid">{filteredProducts.map((product) => <ProductCard key={product.id} product={product} favorite={favorites.includes(product.id)} onFavorite={() => toggleFavorite(product.id)} onOpen={() => void openProduct(product)}/>)}</div> : <div className="empty-state" role="status" aria-live="polite"><Icon name="search" size={32}/><h3>
+  {catalogStatus === "loading"
+    ? "Carregando produtos..."
+    : catalogStatus === "error"
+      ? "Catálogo temporariamente indisponível"
+      : "Nenhum produto encontrado"}
+</h3><p>
+  {catalogStatus === "loading"
+    ? "Estamos preparando a seleção da MR."
+    : catalogStatus === "error"
+      ? "Não foi possível acessar os produtos agora. Tente novamente."
+      : "Tente remover um filtro ou pesquisar outro termo."}
+</p>{catalogStatus === "ready" ? (
+  <button
+    className="secondary-btn"
+    onClick={() => {
+      setQuery("");
+      setBrand("Todas");
+      setCategory("Todos");
+    }}
+  >
+    Limpar filtros
+  </button>
+) : catalogStatus === "error" ? (
+  <button
+    className="secondary-btn"
+    onClick={() => window.location.reload()}
+  >
+    Tentar novamente
+  </button>
+) : null}</div>}
         </section>}
 
         {pathname === "/sobre" && <section className="manifesto section page-section" id="sobre">
