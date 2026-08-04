@@ -71,3 +71,6 @@ error_log
 
 # Backups locais do banco
 database/backups/
+
+# Execução local da plataforma MR
+.runtime/
