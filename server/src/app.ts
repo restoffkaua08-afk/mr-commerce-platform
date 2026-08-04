@@ -20,7 +20,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     },
     trustProxy: env.TRUST_PROXY,
     requestIdHeader: "x-request-id",
-    disableRequestLogging: false,
+
   });
 
   await app.register(helmet, {
