@@ -6,7 +6,8 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "npm run build && node tests/system.integration.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.28.0",
