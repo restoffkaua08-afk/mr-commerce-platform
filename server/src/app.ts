@@ -11,6 +11,7 @@ import { env } from "./config/env.js";
 import { healthRoutes } from "./routes/health.js";
 import { productRoutes } from "./modules/products/product.routes.js";
 import { affiliateRoutes } from "./modules/affiliate/affiliate.routes.js";
+import { catalogRoutes } from "./modules/catalog/catalog.routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -65,6 +66,10 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   await app.register(productRoutes, {
+    prefix: "/api/v1",
+  });
+
+  await app.register(catalogRoutes, {
     prefix: "/api/v1",
   });
 

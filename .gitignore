@@ -68,3 +68,6 @@ error_log
 *.bak
 *.old
 *.orig
+
+# Backups locais do banco
+database/backups/
