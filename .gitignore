@@ -1,76 +1,45 @@
-# Dependências
+﻿# Dependências
 node_modules/
-/.pnp
-.pnp.js
-.pnp.*
-.yarn/
+web/node_modules/
+server/node_modules/
 
-# Build
+# Builds
+.next/
+web/.next/
 dist/
-dist-ssr/
 build/
-.out/
-*.local
+coverage/
 
-# Arquivos do sistema
-.DS_Store
-Thumbs.db
-desktop.ini
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+web/.env
+web/.env.*
+!web/.env.example
+server/.env
+server/.env.*
+!server/.env.example
 
 # Logs
-logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
 
-# Ambiente e variáveis
-.env
-.env.local
-.env.*.local
-.env.production
-
-# IDE e editores
+# Sistema / IDE
+.DS_Store
+Thumbs.db
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
-.project
-.classpath
-.settings/
 
-# Banco de dados (se tiver arquivos locais)
-*.sqlite
-*.db
-
-# Arquivos temporários
+# Temporários
 *.tmp
 *.temp
 .cache/
-.parcel-cache/
 
-# Cobertura de testes
-coverage/
-.nyc_output/
-
-# Arquivos do Vite
-.vite/
-vite.config.js.timestamp-*
-
-# Backend PHP (arquivos temporários)
-*.cache
-*.log
-error_log
-
-# Arquivos de backup
-*.bak
-*.old
-*.orig
+# Runtime local
+.runtime/
 
 # Backups locais do banco
 database/backups/
-
-# Execução local da plataforma MR
-.runtime/
